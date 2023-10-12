@@ -1,0 +1,98 @@
+#爬取IG關鍵字圖片
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+import time
+import requests
+from bs4 import BeautifulSoup
+import os
+import wget
+
+path= "C:/Users/88696/Desktop/chromedriver-win64/chromedriver.exe"
+
+driver= webdriver.Chrome(path)
+driver.get("https://www.instagram.com/")
+
+username = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.NAME, "username"))
+)
+password = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.NAME, "password"))
+)
+login = driver.find_element_by_xpath('//*[@id="loginForm"]/div/div[3]/button')
+
+username.clear()
+password.clear()
+username.send_keys('IG帳號')
+password.send_keys('IG密碼')
+login.click()
+
+
+# ------ 不儲存登入資料 ------
+WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/div')))
+
+# ------網頁元素定位 ------
+store_click = driver.find_elements_by_xpath('/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[2]/section/main/div/div/div/div/div')[0]
+
+# ------ 點擊不儲存鍵 ------
+store_click.click()
+
+# ------ 不開啟通知 ------
+WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[3]/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/button[2]')))
+
+# ------ 網頁元素定位 ------                                                                                                    
+notification_click = driver.find_elements_by_xpath ('/html/body/div[3]/div[1]/div/div[2]/div/div/div/div/div[2]/div/div/div[3]/button[2]')[0]
+
+# ------ 點擊不開啟通知 ------
+notification_click.click()
+
+
+
+search_click=driver.find_elements_by_xpath ('/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[1]/div/div/div[1]/div/div[2]/div[2]/span/div/a/div')[0]
+#------- 點開搜尋 ------
+search_click.click()
+
+search = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div/div/div[1]/div[1]/div[1]/div/div/div[2]/div/div/div[2]/div/div/div[1]/div/div/input'))
+)
+keyword = "#dog"
+
+search.send_keys(keyword)
+time.sleep(3)
+
+search.send_keys(Keys.RETURN)
+
+time.sleep(1)
+
+
+driver.get("https://www.instagram.com/explore/tags/dog/")
+
+
+
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CLASS_NAME, "_aagu"))
+)
+imgs = driver.find_elements_by_class_name("_aagu")
+
+for i in range(5):
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(5)
+
+path = os.path.join(keyword)
+os.mkdir(path)
+
+count = 0
+for img in imgs:
+    save_as = os.path.join(path, keyword + str(count) + '.jpg')
+    # print(img.get_attribute("src"))
+    wget.download(img.get_attribute("src"), save_as)
+    count += 1
+
+
+time.sleep(2)
+
+driver.close()
+
